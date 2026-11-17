@@ -1,0 +1,41 @@
+# What is an LLM agent?
+
+An **LLM agent** is a system that can execute tasks given in natural language or structured formats. It uses the planning capabilities of Large Language Models (LLMs) by calling tools that enable interaction with its environment. The agent also includes a memory mechanism. Both the agent's process and outcomes are non-deterministic.
+
+![LLM Agent Structure](https://ucarecdn.com/da63285e-e4f1-4a3a-a4f0-3ba66f5d0478/)
+
+## Butler as an agent abstraction
+
+Let's step away from the scientific definition and talk in abstractions. People love explaining agents by comparing them to butlers. We'll follow this tradition and do the same.
+
+Let's start with the simplest agent – just an LLM. Imagine a butler confined to a windowless, dark room. You can talk with him. He has excellent general knowledge and can answer questions. If you ask about the current weather, he'll try to please you by making up an answer. But you know he has no idea what's actually happening outside because he's trapped in darkness. This perfectly describes what an LLM is: it has a knowledge base, can interact with us in natural language, and can provide information about the world, but we cannot trust that information.
+
+![Butler in the room without window](https://ucarecdn.com/d0b809fa-3fa8-4700-bf25-d4526044a6ac/)
+
+## Adding tools
+
+Now let's add a window to the butler's room, install a thermometer, and turn on a TV displaying the 24-hour weather forecast. When you next ask about the weather, the butler walks to the window, checks the thermometer, watches the forecast, and provides accurate information. You can trust this answer because the butler can interact with the external environment. This window and thermometer represent the simplest example of **tools** that an agent can access.
+
+![Butler with tools](https://ucarecdn.com/fe3a8df3-771e-4788-bb24-689bb8268777/)
+
+## Enabling an agent to plan
+
+However, this agent isn't very useful yet – you could look out the window yourself. Let's give the butler access to your wardrobe and ask him to prepare your outfit for going out. The butler thinks: "I need to check the weather first, then select appropriate clothing." This demonstrates a simple **planning mechanism**. Before taking action, the agent evaluates available resources, creates an action plan, and executes it. For your next request, you expect the butler to check the current weather, review the weather forecast, examine the wardrobe, and choose suitable clothing.
+
+![Butler, analyzing weather and accessing wardrobe](https://ucarecdn.com/70c71628-bb7a-4ca6-84be-01b9e8c675da/)
+
+## Non-determinism
+
+Interestingly, you don't know in advance which outfit the butler will prepare. On a cool day, you might expect a sweater and jeans, but the butler prepares a jacket and trousers instead. The goal is achieved, but the solution demonstrates **non-determinism**. This is a characteristic property of agents. Non-determinism can manifest in both the final result and the chosen actions to reach it.
+
+![Butler proposing a suit](https://ucarecdn.com/c94822c7-b363-4fb9-a79c-010d0fcd2020/)
+
+## Memory of an agent
+
+You can influence this non-determinism in several ways. For example, you could give the butler a list of your clothing preferences – if it's rainy, choose a waterproof raincoat; if it's hot, wear flip-flops. When you ask the butler to review this list before planning, he reads through it, remembers your preferences, and selects clothing based on them. The ability to give an agent a "preferences list" that it refers to represents a simple version of a **memory mechanism**.
+
+![Butler with notes on the wall](https://ucarecdn.com/0f175e01-c520-46e5-ab21-ddeececa43ee/)
+
+## Conclusion
+
+An LLM agent consists of the reasoning capability of an LLM core, tools to interact with the external environment, planning ability to break down and sequence actions, and memory to store and retrieve relevant information. Together, these components enable agents to perform complex, context-aware tasks autonomously, though with inherent non-deterministic behavior.
