@@ -2212,32 +2212,168 @@ class SessionManager(private val clock: ClockProvider) {
 
 📖 **Theoriedocument**: [57 - Repository pattern in KMP.md](57%20-%20Repository%20pattern%20in%20KMP.md)
 
-*Nog geen opdrachten geregistreerd voor dit onderwerp. Gebruik het onderstaande sjabloon om nieuwe vragen toe te voegen:*
+### Vraag 57.1: The three layers in a shared data layer
 
-```markdown
-### Vraag XX.Y: [Titel van de vraag]
-
-- **Bron**: [Hyperskill Step ID of referentie]
-- **Type**: Meerkeuze / Open vraag / Code-opdracht
-- **Theorie-sectie**: [Titel van de paragraaf in het bijbehorende theoriebestand]
+- **Bron**: [Hyperskill Step 53931](https://hyperskill.org/learn/step/53931)
+- **Type**: Koppelvraag (Matching)
+- **Theorie-sectie**: *Three layers*
 
 #### Vraagstelling
-> [Beschrijving of vraag]
+> Match each term to its role in a shared data layer:
 
-#### Keuzeopties / Opdracht
-- [ ] Optie A
-- [x] Optie B (Correct)
-- [ ] Optie C
+#### Termen en Rollen
+1. **DTO (Data Transfer Object)**: De `@Serializable` klasse die exact overeenkomt met de structuur en het formaat van de API/wire-response.
+2. **Domain Model**: Een pure Kotlin-klasse die uitsluitend gevormd is naar de functionele behoeften en datatypes van de applicatie zelf (onafhankelijk van een specifieke backend).
+3. **Repository**: De interface/component waar de rest van de app mee communiceert; haalt DTO's op en levert domeinmodellen terug.
+4. **Mapper (toDomain)**: De vertaalfunctie die ruwe data uit het DTO transformeert naar het schone domeinmodel.
 
 <details>
 <summary>💡 <b>Klik hier voor het juiste antwoord en toelichting</b></summary>
 
-**Correct Antwoord:** ...
+**Correcte Koppeling:**
+- **DTO**: Matches the API / wire format shape (`@Serializable`).
+- **Domain model**: Plain class shaped around what the application actually needs.
+- **Repository**: The boundary component that the application talks to; fetches DTOs and exposes domain models.
+- **Mapper function**: Translates wire-format DTOs into application domain models.
 
 **Toelichting:**
-...
+- In een robuuste KMP-architectuur worden netwerk-/database-modellen (DTO's) strikt gescheiden van domeinmodellen. De repository vormt de grenslaag die DTO's ophaalt via netwerkbibliotheken zoals Ktor, en deze mapt naar schone domeinobjecten voor gebruik in ViewModels en UI.
 </details>
+
+### Vraag 57.2: Why isolate DTOs from the rest of the application
+
+- **Bron**: [Hyperskill Step 53932](https://hyperskill.org/learn/step/53932)
+- **Type**: Meerkeuzevraag (Multiple Choice - Enkel antwoord)
+- **Theorie-sectie**: *Repository pattern in KMP / Three layers*
+
+#### Vraagstelling
+> Why does the topic argue against using a DTO like `TaskDto` directly throughout the app, instead of mapping it to a domain model?
+
+#### Keuzeopties
+- [ ] **A.** Because DTOs cannot be compiled for multiplatform targets like iOS.
+- [x] **B.** Because wire-format changes or field renames on the backend would ripple into every screen and component that uses the DTO directly. (Correct)
+- [ ] **C.** Because Kotlin Multiplatform requires all classes used in UI to be interfaces.
+- [ ] **D.** Because `@Serializable` classes consume significantly more memory than plain domain classes.
+
+<details>
+<summary>💡 <b>Klik hier voor het juiste antwoord en toelichting</b></summary>
+
+**Correct Antwoord:** **B**
+
+**Toelichting:**
+- DTO's weerspiegelen het draadformaat van de backend (inclusief optionele nullable velden, backend-specifieke naamgeving en API-versie eigenaardigheden). Wanneer DTO's overal in de UI en business logica worden gebruikt, zorgt elke wijziging in de backend-API voor brekende wijzigingen door de hele applicatie. Door te mappen naar een domeinmodel blijft de impact van API-wijzigingen geïsoleerd tot de mapper/repository laag.
+</details>
+
+### Vraag 57.3: Mapping a DTO to a Domain model
+
+- **Bron**: [Hyperskill Step 53933](https://hyperskill.org/learn/step/53933)
+- **Type**: Invuloefening (Fill in the blanks)
+- **Theorie-sectie**: *Three layers*
+
+#### Vraagstelling
+> Complete the mapper that translates a `TaskDto` into a domain `Task`:
+
+```kotlin
+// commonMain
+@Serializable
+data class TaskDto(
+    val id: Int,
+    val name: String,
+    val status: String,
+    val due_date: String? = null
+)
+
+data class Task(
+    val id: Int,
+    val name: String,
+    val status: TaskStatus,
+    val dueDate: LocalDate?
+)
+
+enum class TaskStatus { TODO, ONGOING, DONE }
+
+fun TaskDto.toDomain(): Task = Task(
+    id = id,
+    name = name,
+    status = TaskStatus.___(status.___()),
+    dueDate = due_date?.let { LocalDate.___(it) }
+)
 ```
+
+#### In te vullen waarden
+1. `valueOf` (in `TaskStatus.valueOf(...)`)
+2. `uppercase` (in `status.uppercase()`)
+3. `parse` (in `LocalDate.parse(it)`)
+
+<details>
+<summary>💡 <b>Klik hier voor het juiste antwoord en toelichting</b></summary>
+
+**Correcte Code:**
+```kotlin
+fun TaskDto.toDomain(): Task = Task(
+    id = id,
+    name = name,
+    status = TaskStatus.valueOf(status.uppercase()),
+    dueDate = due_date?.let { LocalDate.parse(it) }
+)
+```
+
+**Toelichting:**
+- `TaskStatus.valueOf(status.uppercase())` zet de inkomende string om naar de juiste enum-waarde.
+- `due_date?.let { LocalDate.parse(it) }` parseert de optionele ISO-datumstring via `kotlinx-datetime` veilig naar een type-safe `LocalDate` instantie.
+</details>
+
+### Vraag 57.4: Data representation exposed to the rest of the application
+
+- **Bron**: [Hyperskill Step 53934](https://hyperskill.org/learn/step/53934)
+- **Type**: Meerkeuzevraag (Multiple Choice - Enkel antwoord)
+- **Theorie-sectie**: *Three layers*
+
+#### Vraagstelling
+> After a `TaskDto` is mapped to a `Task` using `toDomain()`, what does the rest of the app see?
+
+#### Keuzeopties
+- [ ] **A.** The raw JSON payload and HTTP response headers.
+- [ ] **B.** Nullable strings for `due_date` and unvalidated strings for `status`.
+- [x] **C.** A nullable `dueDate: LocalDate?` and a typed `TaskStatus` enum — never the DTO's raw string shape. *(Gecorrigeerd: in de originele Hyperskill-tekst staat abusievelijk "non-nullable dueDate: LocalDate?")* (Correct)
+- [ ] **D.** An `expect` declaration that must be resolved per platform target.
+
+<details>
+<summary>💡 <b>Klik hier voor het juiste antwoord en toelichting</b></summary>
+
+**Correct Antwoord:** **C**
+
+**Toelichting:**
+- Zodra de mapping voltooid is, ziet de rest van de applicatie uitsluitend het domeinmodel `Task`. Ruwe JSON-details, snake_case veldnamen (`due_date`) en ongevalideerde primitieve types (`String`) worden vervangen door strongly-typed concepten zoals `TaskStatus` en `LocalDate?`.
+- **Noot over originele Hyperskill-formulering**: In de oorspronkelijke meerkeuzeoptie op Hyperskill stond de formulering *"A non-nullable dueDate: LocalDate? and a typed TaskStatus enum..."*. Dit is een tegenstrijdigheid/typefout van de auteur: in Kotlin is `LocalDate?` (met vraagteken) een **nullable** type, wat overeenkomt met de optionele `due_date: String? = null` in `TaskDto`. De gecorrigeerde bewoording is daarom **nullable `dueDate: LocalDate?`** (of sterk getypeerd t.o.v. de ruwe string).
+</details>
+
+### Vraag 57.5: Why use an Interface instead of expect/actual for Repositories
+
+- **Bron**: [Hyperskill Step 53935](https://hyperskill.org/learn/step/53935)
+- **Type**: Meerkeuzevraag (Multiple Choice - Meerdere antwoorden mogelijk)
+- **Theorie-sectie**: *Defining the repository as an interface / Testing behind the interface*
+
+#### Vraagstelling
+> Which properties of `TaskRepository` make it a case for an interface rather than `expect`/`actual`, per the interface-vs-expect/actual guidance covered earlier?
+
+#### Keuzeopties
+- [x] **A.** The repository has multiple methods and operations rather than a single top-level utility function. (Correct)
+- [x] **B.** It has no platform-specific behavior or native OS dependencies; multiplatform libraries like Ktor and kotlinx.serialization run directly in `commonMain`. (Correct)
+- [x] **C.** There is an obvious need to substitute a fake implementation (`FakeTaskRepository`) in unit tests in `commonTest` without requiring platform-specific test sets. (Correct)
+- [ ] **D.** The Kotlin compiler prohibits using `expect`/`actual` for classes that use coroutines or `suspend` functions.
+
+<details>
+<summary>💡 <b>Klik hier voor het juiste antwoord en toelichting</b></summary>
+
+**Correcte Antwoorden:** **A**, **B** en **C**
+
+**Toelichting:**
+1. **Optie A (Correct):** Interfaces zijn uitermate geschikt voor componenten met meerdere gerelateerde functies en bewerkingen.
+2. **Optie B (Correct):** Omdat Ktor en kotlinx.serialization multiplatform zijn, is er geen platformspecifieke code nodig; alles leeft in `commonMain`.
+3. **Optie C (Correct):** Met een interface kan in `commonTest` eenvoudig een `FakeTaskRepository` worden geïnjecteerd via Koin zonder dat er platform-specifieke test sourcesets (`androidUnitTest`, `iosTest`) nodig zijn.
+4. **Optie D (Onjuist):** `expect`/`actual` ondersteunt gewoon `suspend` functies, maar is hier architectonisch overbodig omdat er geen platformverschillen bestaan.
+</details>
 
 ---
 
